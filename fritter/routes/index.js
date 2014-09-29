@@ -11,33 +11,34 @@ router.get('/sign_up', function(req, res){
     res.render('sign_up', {title: 'Welcome to the sign-up page'})
 })
 
-/* new session */
-router.get('/open_user_session', function(req, res){
-    var user_name = req.body.user_name;
-    var password = req.body.password;
+/* new session */ //    ************************************************postr or get here????
+//cannot read password property of null when "post" it dies
+router.post('/open_user_session', function(req, res){
     var db = req.db;
+    var username = req.body.user_name;
+    var password = req.body.password; 
     var collection = db.get('users_collection');
-    collection.findOne({username: user_name}, function(err, doc){
+    //console.log(collection.find());
+    console.log("gathered data: password = " + username);
+    collection.findOne({user_name: username}
+        , function(err, doc){
         if (err){
             res.send("En error occured during your login")
         }
-        if (doc.password === password){
-            req.session.regenerate(
-                function(){
-                req.session.user_name = user_name;
-                res.redirect('/allposts'); ///go to allposts
-            });
-        }
         else{
-            res.redirect("/");  //go sign up
+            console.log("HEHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHH");
+            console.log(doc);
+            if(doc.password === password){
+                req.session.regenerate(
+                    function(){
+                    req.session.user_name = username;
+                    res.render('post_new_post', {title : "signing in complete"}); ///go to allposts
+                });
+            }
+            else{
+                res.redirect("/");  //go sign up
+            }
         }
-    });
-});
-
-/* logging out*/
-router.get('/logout',function(req,res){
-    req.session.destroy(function(){
-        res.redirect('/'); //go back to homepage
     });
 });
 
@@ -49,27 +50,27 @@ router.post('/sign_up', function(req, res) {
 
     // Get our form values. These rely on the "name" attributes
     var name = req.body.name;
-    var user_name = req.body.user_name;
+    var username = req.body.user_name;
     var password = req.body.password;
 
-    console.log("user signing up. user_name = "+ user_name);
+    console.log("user signing up. user_name = "+ username);
 
     // Set our collection ****************************************Cannot call method 'get' of undefined
     var collection = db.get('users_collection');
 
     collection.findOne({
-        user_name : user_name
+        user_name : username
     }, function (err, doc) {
         if (err) {
             // If it failed, return error
             res.send("There was a problem finding your information in the database.");
         }
         else {
-            if (doc === null){ // command not working : doc.length === 1
-                console.log("user signing up. user_name = "+ user_name + " valid username");
+            if (doc === null){ // command not working : doc.length === , .size??
+                console.log("user signing up. user_name = "+ username + " valid username");
                 collection.insert({
                     name : name,
-                    user_name : user_name,
+                    user_name : username,  //                          ???????********do i have to use ""?
                     password : password
                     }, function (err, doc) {
                         if (err) {
@@ -78,17 +79,24 @@ router.post('/sign_up', function(req, res) {
                         }
                         else {
                              // If it worked, set the header so the address bar doesn't still say /adduser
-                            res.render("/failure", {title: "Failed operation"})
+                            res.redirect("/");
                         }
                     });
                 }
             else {
-                res.location("/");
+                res.location("/failure");
                 // And forward to success page
-                res.redirect("/");
+                res.redirect("/failure");
             }
         }
 
+    });
+});
+
+/* logging out*/
+router.get('/logout',function(req,res){
+    req.session.destroy(function(){
+        res.redirect('/'); //go back to homepage
     });
 });
 
@@ -97,20 +105,25 @@ router.post('/sign_up', function(req, res) {
 
 
 /* show this post that i want to edit*/
-router.get('/:_id',function(req, res) {  //is that how it is done???
+router.get('/posts/:id',function(req, res) {  //is that how it is done???
     var db = req.db;
-    var id = req.params.value;
+    var id = req.params.id; //_id from link
     var current_user = req.session.user_name; ///////check this out/////////session
     var collection = db.get("posts");
-    collections.findOne({_id:id}, function (err, docs){
-        //if you are allowed to edit this go on ahead
-        if (docs.user_name === current_user){
-            res.render('/post_to_edit', {title:"Edit", post: docs.post, id:docs._id});
+    collection.findOne({_id:id}, function (err, docs){
+        if (err){
+            res.send("There was a problem looking for your post.");
         }
+        //if you are allowed to edit this go on ahead
         else{
-            //no, you stay here
-            res.location("/allposts");
-            res.redirect("/allposts");
+            if (docs.user_name === current_user){
+                res.render('post_to_edit', {title:"Edit", postText: docs.post, id:docs._id});
+            }
+            else{
+                //no, you stay here
+                res.location("/allposts");
+                res.redirect("/allposts");
+            }
         }
     });
 });
@@ -139,10 +152,14 @@ router.post('/update_post', function(req, res){
 
 /* GET the confirmation page for postRemoval */
 router.get('/postupdated', function(req, res) {
-    res.render('postupdated', { title: 'Post Updated' })
+    res.render('/postupdated', { title: 'Post Updated' })
 });
 
-router.post("/post_new_post", function(req, res){
+router.get('/post_new_post', function(req, res){
+    res.render('/post_new_post', {title: 'another post'})
+});
+
+router.post('/post_new_post', function(req, res){
     var db = req.db;
     var user_post = req.body.post;
     var user_name = req.session.user_name; //find a way to use session for this
@@ -156,26 +173,27 @@ router.post("/post_new_post", function(req, res){
             if (err) {
                  // If it failed, return error
              res.send("There was a problem posting your post.");
-        }
-        else{
-            //hader
-            res.location("/allposts");
-            // And forward to success page
-            res.redirect("/allposts");
-        }
-    })
+            }
+            else{
+                //hader
+                res.location("/allposts");
+                // And forward to success page
+                res.redirect("/allposts");
+            }
+        })
 });
 
 /* POST to seeallposts sevice*/
 router.get('/allposts', function(req, res){
     var db = req.db;
-    var user_name = req.params.user_name; //substitute for proper way to call it via session
+    var user_name = req.session.user_name; //substitute for proper way to call it via session
 
     var collection = db.get('posts');
         
     collection.find({},{},function(e,docs){
-        res.render('allposts', {
-            allposts : docs
+        res.render('allposts', { 
+            title: "allpoststoshow",
+            result : docs
         });
     });
 });

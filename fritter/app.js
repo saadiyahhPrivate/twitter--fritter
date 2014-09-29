@@ -9,7 +9,7 @@ var bodyParser = require('body-parser');
 // New Code
 var mongo = require('mongodb');
 var monk = require('monk');
-var db = monk('localhost:27017/fritter');
+var db = monk('localhost/fritter'); //localhost:27017/fritter'
 
 var routes = require('./routes/index');
 var users = require('./routes/users');
@@ -29,17 +29,17 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(cookieParser("secretTockenHere"));
 //session
-app.use(session({secret: "secretTockenHere"})); //to be modified later
+app.use(session({secret: "secretTockenHere", resave :true, saveUninitialized: true})); //to be modified later
 
 app.use(express.static(path.join(__dirname, 'public')));
 
 // Make our db accessible to our router my app stops working when i use session in here
 app.use(function(req,res,next){
-    req.db = db;          //WHY DO I NOT USE SESSION HERE??????
+    req.db = db;        //WHY DO I NOT USE SESSION HERE??????
     next();
 });
 
-app.use('/posts', posts);
+//app.use('/posts', posts);
 app.use('/', routes);
 app.use('/users', users);
 
