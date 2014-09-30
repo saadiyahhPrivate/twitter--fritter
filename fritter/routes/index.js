@@ -105,10 +105,10 @@ router.get('/logout',function(req,res){
 
 
 /* show this post that i want to edit*/
-router.get('/posts/:id',function(req, res) {  //is that how it is done???
+router.get('/posts/:id',function(req, res) {  
     var db = req.db;
     var id = req.params.id; //_id from link
-    var current_user = req.session.user_name; ///////check this out/////////session
+    var current_user = req.session.user_name; 
     var collection = db.get("posts");
     collection.findOne({_id:id}, function (err, docs){
         if (err){
@@ -129,34 +129,58 @@ router.get('/posts/:id',function(req, res) {  //is that how it is done???
 });
 
 
-router.post('/update_post', function(req, res){
+router.post('/posts/update_post', function(req, res){
     var db = req.db;
     var collection = db.get('posts');
-    var button_pressed = req.params.value; //how to check which button was pressed?
-    var id = req.params._id;
-    var post = req.params.post;
-    if (button_pressed === 1){ //update
-        collection.findAndModify({
+    var id = req.body.id; ////
+    var post = req.body.post;
+    var user_name = req.session.user_name;
+    console.log(" CURRENTLY UPDATING THE POST WITH ID : "+ id);
+    collection.findAndModify({
             query: {_id: id}, 
-            update: {post: post}, 
-            upsert: true
-        })
-    }
-    else{
-        collection.findAndModify({ //delete entry
+            update: {user_name: user_name, post: post, _id: id} 
+    }, function(err, doc){
+        if (err){
+            res.send("There was a problem updating your post.");
+        }
+        else{
+            res.location("/update_post");
+            res.redirect("/update_post");
+        }
+});
+});
+
+
+router.post('/posts/delete_post', function(req,res){
+    var db = req.db;
+    var collection = db.get('posts');
+    var id = req.body.id; ////
+    console.log(" CURRENTLY DELETING THE POST WITH ID : "+ id);
+    collection.findAndModify({
             query: {_id: id}, 
-            delete: true   
-        })
-    }
+            delete: true
+    }, function(err, doc){
+        if (err){
+            res.send("There was a problem deleting your post.");
+        }
+        else{
+            res.location("/update_post");
+            res.redirect("/update_post");
+        }
+});
 });
 
 /* GET the confirmation page for postRemoval */
-router.get('/postupdated', function(req, res) {
-    res.render('/postupdated', { title: 'Post Updated' })
+router.get('/update_post', function(req, res) {
+    res.render('update_post', { title: 'Post Updated' })
+});
+
+router.get('/delete_post', function(req, res) {
+    res.render('update_post', { title: 'Post Deleted' })
 });
 
 router.get('/post_new_post', function(req, res){
-    res.render('/post_new_post', {title: 'another post'})
+    res.render('post_new_post', {title: 'Post Another Post'})
 });
 
 router.post('/post_new_post', function(req, res){
