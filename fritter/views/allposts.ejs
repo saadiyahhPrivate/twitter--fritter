@@ -13,12 +13,11 @@
       <% var docs = result; %>
       <% var num = result.length; %>
       <% for(var i = 0; i < num; i++) { %>
-      <div>
+      <div class ="postsStyling">
           <% var id = docs[i]._id; %>
           <b><%= docs[i].user_name %> says, </br></b>
           <%= docs[i].post %> </br>
           <a href="/posts/<%=id%>">Edit this post!</a> 
-          <br></br>
           <!--how to enable this only on this post anchor tag, embedded js -->
       </div>
     <% } %>

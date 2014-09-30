@@ -9,7 +9,8 @@
     <p> </p>
       <form method="post" action="update_post" target="new">
          <!-- How to so i can check it in my method?? send this?? -->
-        Post: <input type="text" name="post" value ="<%=postText%>">
+        Post: </br>
+        <input type="text" name="post" value ="<%=postText%>" class="postTextboxStyling">
         <input type="hidden" name="id" value=<%=id%>> </br>
         <input type="hidden" name="user_name" value=<%=user_name%>> </br>
         <button type="submit" name="button">Update Post!</button>

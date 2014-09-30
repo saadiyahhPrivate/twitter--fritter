@@ -6,3 +6,21 @@ body {
 a {
   color: #00B7FF;
 }
+
+.postsStyling {
+	margin-top: 20px;
+    margin-bottom: 20px;
+    margin-right: 20px;
+    margin-left: 20px;
+    padding-top: 10px;
+    padding-right: 10px;
+    padding-bottom: 10px;
+    padding-left: 10px;
+	background-color:#CADCFF;
+	width:auto;
+}
+
+.postTextboxStyling {
+	cols:40;
+	rows:6;
+}
