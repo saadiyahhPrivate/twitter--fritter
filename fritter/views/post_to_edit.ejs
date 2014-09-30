@@ -11,14 +11,16 @@
          <!-- How to so i can check it in my method?? send this?? -->
         Post: <input type="text" name="post" value ="<%=postText%>">
         <input type="hidden" name="id" value=<%=id%>> </br>
+        <input type="hidden" name="user_name" value=<%=user_name%>> </br>
         <button type="submit" name="button">Update Post!</button>
       </form>​​​​​​​​​​​​​​​​​​​​​​​​​​
       <form method="post" action="delete_post" target="new">
          <!-- How to so i can check it in my method?? send this?? -->
         <input type="hidden" name="id" value=<%=id%>> 
+        <input type="hidden" name="user_name" value=<%=user_name%>> 
         <button type="submit" name="button" value=<%=id%>>Delete Post!</button>
-      </form>​​​​​​​​​​​​​​​​​​​​​​​​​​
-    <a href="/allposts"> Go To feed!</a></br>
-    <a href="/logout"> Logout!</a>
+      </form>​​​​​​​​​​​​​​​​​​​​​​​​​​</br>
+    <a href="/allposts">Go To feed!</a></br>
+    <a href="/logout">Logout!</a>
   </body>
 </html>

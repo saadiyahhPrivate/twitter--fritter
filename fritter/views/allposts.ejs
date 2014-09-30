@@ -16,10 +16,8 @@
       <div>
           <% var id = docs[i]._id; %>
           <b><%= docs[i].user_name %> says, </br></b>
-          <%= docs[i]._id %> </br>
           <%= docs[i].post %> </br>
           <a href="/posts/<%=id%>">Edit this post!</a> 
-          <br></br>
           <br></br>
           <!--how to enable this only on this post anchor tag, embedded js -->
       </div>
