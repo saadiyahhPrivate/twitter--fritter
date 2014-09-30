@@ -12,13 +12,13 @@ var monk = require('monk');
 //var db = monk('localhost/fritter'); //localhost:27017/fritter'
 
 //to add mongo
-var connection_string = 'localhost/fritter';
+var connection_string = 'localhost/saadiyahfritter';
 
 if (process.env.OPENSHIFT_MONGODB_DB_PASSWORD) {
   connection_string = process.env.OPENSHIFT_MONGODB_DB_USERNAME + ':' +
         process.env.OPENSHIFT_MONGODB_DB_PASSWORD + '@' +
         process.env.OPENSHIFT_MONGODB_DB_HOST + ':' +
-        process.env.OPENSHIFT_MONGODB_DB_PORT + '/fritter';
+        process.env.OPENSHIFT_MONGODB_DB_PORT + '/saadiyahfritter';
 }
 
 var db = monk(connection_string);
@@ -51,7 +51,7 @@ app.use(function(req,res,next){
     next();
 });
 
-//app.use('/posts', posts);
+app.use('/posts', posts);
 app.use('/', routes);
 app.use('/users', users);
 

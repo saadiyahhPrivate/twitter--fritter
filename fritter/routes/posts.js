@@ -7,7 +7,7 @@ router.get('/', function(req, res) {
 });
 
 /* show this post that i want to edit*/
-router.get('/:id',function(req, res) {  
+router.get('/posts/:id',function(req, res) {  
     var db = req.db;
     var id = req.params.id; //_id from link
     var current_user = req.session.user_name; 
@@ -31,7 +31,7 @@ router.get('/:id',function(req, res) {
 });
 
 
-router.post('/update_post', function(req, res){
+router.post('/posts/update_post', function(req, res){
     var db = req.db;
     var collection = db.get('posts');
     var id = req.body.id; ////
@@ -64,7 +64,7 @@ router.post('/update_post', function(req, res){
 });
 
 
-router.post('/delete_post', function(req,res){
+router.post('/posts/delete_post', function(req,res){
     var db = req.db;
     var collection = db.get('posts');
     var id = req.body.id;
