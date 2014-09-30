@@ -1,6 +1,7 @@
 body {
   padding: 50px;
   font: 14px "Lucida Grande", Helvetica, Arial, sans-serif;
+  background-color:#F0F0FF;
 }
 
 a {
@@ -17,10 +18,17 @@ a {
     padding-bottom: 10px;
     padding-left: 10px;
 	background-color:#CADCFF;
-	width:auto;
+	max-width:500px;
+	word-break: break-word;
+	border: 2px solid #888888;
+	box-shadow: 10px 10px 5px #888888;
 }
 
 .postTextboxStyling {
-	cols:40;
-	rows:6;
+	width:400px;
+	height:100px;
+	margin-bottom: 20px;
+	background-color:#E0E0FF;
+	word-break: break-word;
+
 }
