@@ -1,55 +1,80 @@
 var express = require('express');
 var router = express.Router();
 
-/* GET home/welcome page. */ //OK
+//++++++++++++++++++++++++++++++GETS FOR PAGE RENDERING++++++++++++++++++++++++++++++++++++++
+
+/* GET home/welcome page. */
 router.get('/', function(req, res) {
     res.render('welcomepage', { title: 'Welcome to Fritter' });
 });
 
-/*GET sign_up page!!*/  //OK
+/*GET sign_up page!!*/ 
 router.get('/sign_up', function(req, res){
     res.render('sign_up', {title: 'Welcome to the sign-up page'})
 })
 
+/*GET failure to sign-up page!!*/
 router.get('/failure', function(req, res){
-    res.render('failure', {title: 'Invalid log-in'})
+    res.render('failure', {title: 'Invalid username chosen'})
 })
 
-/* new session */ //    ************************************************postr or get here????
-//cannot read password property of null when "post" it dies
+/* GET logging out page*/
+router.get('/logout',function(req,res){
+    req.session.destroy(function(){
+        res.redirect('/'); //go back to homepage
+    });
+});
+
+/* GET the confirmation page for postRemoval */
+router.get('/update_post', function(req, res) {
+    res.render('update_post', { title: 'Post Updated' })
+});
+
+/* GET the delete post page */
+router.get('/delete_post', function(req, res) {
+    res.render('update_post', { title: 'Post Deleted' })
+});
+
+/* GET the post new post page */
+router.get('/post_new_post', function(req, res){
+    res.render('post_new_post', {title: 'Post Another Post'})
+});
+
+//+++++++++++++++++++++++++++USER AUTHENTICATION AND SIGN_UP++++++++++++++++++++++++++
+
+//This function logs-in a user and the session user_name (used for authentication purposes)
 router.post('/open_user_session', function(req, res){
     var db = req.db;
     var username = req.body.user_name;
     var password = req.body.password; 
     var collection = db.get('users_collection');
-    //console.log(collection.find());
-    console.log("gathered data: password = " + username);
     collection.findOne({user_name: username}
         , function(err, doc){
         if (err){
             res.send("En error occured during your login")
         }
         else{
+            //if a match was found
             if (doc !== null){ 
-            console.log("HEHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHH");
-            console.log(doc);
-            if(doc.password === password){
-                req.session.regenerate(
-                    function(){
-                    req.session.user_name = username;
-                    res.render('post_new_post', {title : "signing in complete"}); ///go to allposts
-                });
+                //cross check passwords
+                if(doc.password === password){
+                    req.session.regenerate(
+                         function(){
+                        req.session.user_name = username;
+                        ///go to new post page
+                        res.render('post_new_post', {title : "signing in complete"});
+                    });
+                }
             }
-        }
             else{
-                res.redirect("/");  //go sign up
+                res.redirect("/");  //go sign up properly
             }
         }
     });
 });
 
 
-/* POST to Add User Service */ // non functional
+/* POST to Add User Service, essentially equal to signing up */
 router.post('/sign_up', function(req, res) {
     // Set our internal DB variable
     var db = req.db;
@@ -61,7 +86,7 @@ router.post('/sign_up', function(req, res) {
 
     console.log("user signing up. user_name = "+ username);
 
-    // Set our collection ****************************************Cannot call method 'get' of undefined
+    // Set our collection
     var collection = db.get('users_collection');
 
     collection.findOne({
@@ -72,11 +97,11 @@ router.post('/sign_up', function(req, res) {
             res.send("There was a problem finding your information in the database.");
         }
         else {
+            //check if user login exists
             if (doc === null){
-                console.log("user signing up. user_name = "+ username + " valid username");
                 collection.insert({
                     name : name,
-                    user_name : username,  //                          ???????********do i have to use ""?
+                    user_name : username, 
                     password : password
                     }, function (err, doc) {
                         if (err) {
@@ -84,15 +109,16 @@ router.post('/sign_up', function(req, res) {
                             res.send("There was a problem adding the information to the database.");
                         }
                         else {
-                             // If it worked, set the header so the address bar doesn't still say /adduser
+                            // If it worked, set the header so that the address bar 
+                            //doesn't still say /adduser
                             res.redirect("/");
                         }
                     });
             }
             else {
-                console.log("A USER WITH THIS LOGIN ALREADY EXISTS");
+                //resets addressbar
                 res.location("/failure");
-                // And forward to success page
+                // And forward to success page!
                 res.redirect("/failure");
             }
         }
@@ -100,122 +126,17 @@ router.post('/sign_up', function(req, res) {
     });
 });
 
-/* logging out*/
-router.get('/logout',function(req,res){
-    req.session.destroy(function(){
-        res.redirect('/'); //go back to homepage
-    });
-});
 
+//++++++++++++++++++++++++++++++++++++++POSTS+++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-//+++++++++++++POSTS+++++++++++++++++++++++++++++++++++++
-/* show this post that i want to edit*/
-router.get('/posts/:id',function(req, res) {  
-    var db = req.db;
-    var id = req.params.id; //_id from link
-    var current_user = req.session.user_name; 
-    var collection = db.get("posts");
-    collection.findOne({_id:id}, function (err, docs){
-        if (err){
-            res.send("There was a problem looking for your post.");
-        }
-        //if you are allowed to edit this go on ahead
-        else{
-            if (docs.user_name === current_user){
-                res.render('post_to_edit', {title:"Edit", postText: docs.post, id:docs._id, user_name:docs.user_name});
-            }
-            else{
-                //no, you stay here
-                res.location("/allposts");
-                res.redirect("/allposts");
-            }
-        }
-    });
-});
-
-
-router.post('/posts/update_post', function(req, res){
-    var db = req.db;
-    var collection = db.get('posts');
-    var id = req.body.id; ////
-    var post = req.body.post;
-    var current_user = req.body.user_name; // from html form
-    var user_name = req.session.user_name; //session user
-    console.log(" CURRENTLY UPDATING THE POST WITH ID : "+ id);
-    //aditional level of security in case anybody navigates to page without authentication
-    if (current_user === user_name){
-        console.log(" CURRENTLY UPDATING THE POST FROM : "+ user_name);
-        console.log(" CURRENTLY UPDATING THE POST FROM : "+ current_user);
-
-        collection.findAndModify({
-                query: {_id: id}, 
-                update: {user_name: user_name, post: post, _id: id} 
-        }, function(err, doc){
-            if (err){
-                res.send("There was a problem updating your post.");
-            }
-            else{
-                res.location("/update_post");
-                res.redirect("/update_post");
-            }
-        });
-    }
-    else{
-        res.location("/");
-        res.redirect("/");
-    }
-});
-
-
-router.post('/posts/delete_post', function(req,res){
-    var db = req.db;
-    var collection = db.get('posts');
-    var id = req.body.id;
-    var current_user = req.body.user_name; //from html form
-    var user_name = req.session.user_name; //session user
-    console.log(" CURRENTLY DELETING THE POST WITH ID : "+ id);
-    //aditional level of security in case anybody navigates to page without authentication
-    if (current_user === user_name){
-        collection.findAndModify({
-                query: {_id: id}, 
-                remove: true //for some reason, it does not delete
-        }, function(err, doc){
-            if (err){
-                res.send("There was a problem deleting your post.");
-            }
-            else{
-                collection.remove({_id:id});
-                console.log(" CURRENTLY deleting THE POST FROM : "+ user_name);
-                console.log(" CURRENTLY deleting THE POST FROM : "+ current_user);
-                res.location("/update_post");
-                res.redirect("/update_post");
-            }
-        });
-    }else{
-        res.location("/");
-        res.redirect("/");
-    }
-});
-
-/* GET the confirmation page for postRemoval */
-router.get('/update_post', function(req, res) {
-    res.render('update_post', { title: 'Post Updated' })
-});
-
-router.get('/delete_post', function(req, res) {
-    res.render('update_post', { title: 'Post Deleted' })
-});
-
-router.get('/post_new_post', function(req, res){
-    res.render('post_new_post', {title: 'Post Another Post'})
-});
-
+/* POST new post to the database */
 router.post('/post_new_post', function(req, res){
     var db = req.db;
     var user_post = req.body.post;
-    var user_name = req.session.user_name; //find a way to use session for this
+    var user_name = req.session.user_name;
     var collection = db.get('posts');
-    console.log("USERNAME FOR THIS POST IS>>>>>>>>>>>>>>>>>>>>>>>>>: "+ user_name);
+
+    //if the user authenticated himself to see this page
     if (user_name !== undefined){
         collection.insert({
             user_name : user_name,  //user_name
@@ -224,10 +145,10 @@ router.post('/post_new_post', function(req, res){
             function(err, doc) {
                 if (err) {
                      // If it failed, return error
-                 res.send("There was a problem posting your post.");
+                    res.send("There was a problem posting your post.");
                 }
                 else{
-                    //hader
+                    //header
                     res.location("/allposts");
                     // And forward to success page
                     res.redirect("/allposts");
@@ -239,13 +160,13 @@ router.post('/post_new_post', function(req, res){
     }
 });
 
-/* POST to seeallposts sevice*/
+/* POST to see all posts sevice*/
 router.get('/allposts', function(req, res){
     var db = req.db;
-    var user_name = req.session.user_name; //substitute for proper way to call it via session
-
+    var user_name = req.session.user_name;
     var collection = db.get('posts');
-        
+    
+    //show allt he posts in the database
     collection.find({},{},function(e,docs){
         res.render('allposts', { 
             title: "allpoststoshow",
