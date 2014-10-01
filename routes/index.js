@@ -11,6 +11,10 @@ router.get('/sign_up', function(req, res){
     res.render('sign_up', {title: 'Welcome to the sign-up page'})
 })
 
+router.get('/failure', function(req, res){
+    res.render('failure', {title: 'Invalid log-in'})
+})
+
 /* new session */ //    ************************************************postr or get here????
 //cannot read password property of null when "post" it dies
 router.post('/open_user_session', function(req, res){
@@ -68,7 +72,7 @@ router.post('/sign_up', function(req, res) {
             res.send("There was a problem finding your information in the database.");
         }
         else {
-            if (doc === null){ // command not working : doc.length === , .size??
+            if (doc === null){
                 console.log("user signing up. user_name = "+ username + " valid username");
                 collection.insert({
                     name : name,
@@ -84,8 +88,9 @@ router.post('/sign_up', function(req, res) {
                             res.redirect("/");
                         }
                     });
-                }
+            }
             else {
+                console.log("A USER WITH THIS LOGIN ALREADY EXISTS");
                 res.location("/failure");
                 // And forward to success page
                 res.redirect("/failure");
@@ -104,8 +109,6 @@ router.get('/logout',function(req,res){
 
 
 //+++++++++++++POSTS+++++++++++++++++++++++++++++++++++++
-
-
 /* show this post that i want to edit*/
 router.get('/posts/:id',function(req, res) {  
     var db = req.db;

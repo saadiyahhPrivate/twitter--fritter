@@ -1,5 +1,5 @@
 {
-  "name": "fritter",
+  "name": "saadiyah_proj2",
   "version": "0.0.0",
   "private": true,
   "scripts": {
@@ -16,7 +16,7 @@
     "debug": "~2.0.0",
     "ejs": "~0.8.5", 
     "mongodb" : "*",
-    "monk" : "*", 
-    "main": "app.js"
-  }
+    "monk" : "*"
+  },
+  "main": "app.js"
 }
