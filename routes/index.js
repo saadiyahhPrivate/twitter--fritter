@@ -37,7 +37,8 @@ router.get('/delete_post', function(req, res) {
 
 /* GET the post new post page */
 router.get('/post_new_post', function(req, res){
-    res.render('post_new_post', {title: 'Post Another Post'})
+    var user_name = req.session.user_name;
+    res.render('post_new_post', {title: 'Post Another Post', user_name: user_name});
 });
 
 //+++++++++++++++++++++++++++USER AUTHENTICATION AND SIGN_UP++++++++++++++++++++++++++
@@ -62,7 +63,7 @@ router.post('/open_user_session', function(req, res){
                          function(){
                         req.session.user_name = username;
                         ///go to new post page
-                        res.render('post_new_post', {title : "signing in complete"});
+                        res.render('post_new_post', {title : "signing in complete", user_name: username});
                     });
                 }
             }
@@ -148,10 +149,12 @@ router.post('/post_new_post', function(req, res){
                     res.send("There was a problem posting your post.");
                 }
                 else{
-                    //header
-                    res.location("/allposts");
-                    // And forward to success page
-                    res.redirect("/allposts");
+                    //res.render('allposts', {title : "all Posts", user_name: user_name});
+                    //resets addressbar
+                    var path = "allposts/"+user_name;
+                    res.location(path);
+                    // And forward to success page!
+                    res.redirect(path);
                 }
             })
     } else{
@@ -161,16 +164,19 @@ router.post('/post_new_post', function(req, res){
 });
 
 /* POST to see all posts sevice*/
-router.get('/allposts', function(req, res){
+router.get('/allposts/:user_name', function(req, res){
     var db = req.db;
     var user_name = req.session.user_name;
+    var current_user = req.params.user_name
     var collection = db.get('posts');
+    var path = "allposts";
     
     //show allt he posts in the database
     collection.find({},{},function(e,docs){
-        res.render('allposts', { 
+        res.render(path, { 
             title: "allpoststoshow",
-            result : docs
+            result : docs, 
+            user_name : current_user
         });
     });
 });

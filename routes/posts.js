@@ -23,8 +23,9 @@ router.get('/:id',function(req, res) {
             }
             else{
                 //no, you stay here
-                res.location("/allposts");
-                res.redirect("/allposts");
+                var path = "/allposts/"+current_user;
+                res.location(path);
+                res.redirect(path);
             }
         }
     });
@@ -51,8 +52,7 @@ router.post('/update_post', function(req, res){
                 res.send("There was a problem updating your post.");
             }
             else{
-                res.location("/update_post");
-                res.redirect("/update_post");
+                res.render('update_post', {title : "Update complete", user_name: user_name});
             }
         });
     }
@@ -84,8 +84,8 @@ router.post('/delete_post', function(req,res){
             }
             else{
                 collection.remove({_id:id}); //forced delete
-                res.location("/update_post");
-                res.redirect("/update_post");
+                res.render('update_post', {title : "Deletion complete", user_name: user_name});
+
             }
         });
     //in case the user got there without authentication, 
