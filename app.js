@@ -5,15 +5,17 @@ var logger = require('morgan');
 var session = require('express-session');
 var cookieParser = require('cookie-parser');
 var bodyParser = require('body-parser');
+var mongoose = require('mongoose');
 
-// New Code
-var mongo = require('mongodb');
-var monk = require('monk');
-//var db = monk('localhost/fritter'); //localhost:27017/fritter'
 
-//to add mongo
-var connection_string = 'localhost/saadiyahfritter';
+var routes = require('./routes/index');
+var users = require('./routes/users');
+//added a posts js file
+var posts = require('./routes/posts');
+var app = express();
 
+//connection stuff
+var connection_string = 'mongodb://127.0.0.1/saadiyahfritter';
 if (process.env.OPENSHIFT_MONGODB_DB_PASSWORD) {
   connection_string = process.env.OPENSHIFT_MONGODB_DB_USERNAME + ':' +
         process.env.OPENSHIFT_MONGODB_DB_PASSWORD + '@' +
@@ -21,14 +23,13 @@ if (process.env.OPENSHIFT_MONGODB_DB_PASSWORD) {
         process.env.OPENSHIFT_MONGODB_DB_PORT + '/saadiyahfritter';
 }
 
-var db = monk(connection_string);
+//Switching to mongoose
+mongoose.connect(connection_string);
+//var db = mongoose.connection;
+//db.on('error', console.error.bind(console, 'Mongoose connection error:'));
 
-var routes = require('./routes/index');
-var users = require('./routes/users');
-//added a posts js file
-var posts = require('./routes/posts');
 
-var app = express();
+/////////////
 
 // view engine setup
 app.set('views', path.join(__dirname, 'views'));
@@ -44,12 +45,6 @@ app.use(cookieParser("secretTockenHere"));
 app.use(session({secret: "secretTockenHere", resave :true, saveUninitialized: true})); //to be modified later
 
 app.use(express.static(path.join(__dirname, 'public')));
-
-// Make our db accessible to our router my app stops working when i use session in here
-app.use(function(req,res,next){
-    req.db = db;        //WHY DO I NOT USE SESSION HERE??????
-    next();
-});
 
 app.use('/posts', posts);
 app.use('/', routes);

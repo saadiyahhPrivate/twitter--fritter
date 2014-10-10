@@ -1,6 +1,11 @@
 var express = require('express');
 var router = express.Router();
 
+//mongoose addition
+var mongoose = require('mongoose');
+var Users = require("../models/users").Users;
+var Posts = require("../models/posts").Posts;
+
 /* GET users listing. */
 router.get('/', function(req, res) {
   res.send('respond with a resource');
@@ -8,11 +13,13 @@ router.get('/', function(req, res) {
 
 /* show the post that the user wants to edit*/
 router.get('/:id',function(req, res) {  
-    var db = req.db;
+    
     var id = req.params.id; //_id from link
     var current_user = req.session.user_name; 
-    var collection = db.get("posts");
-    collection.findOne({_id:id}, function (err, docs){
+
+    console.log
+    
+    Posts.findOne({_id:id}, function (err, docs){
         if (err){
             res.send("There was a problem looking for your post.");
         }
@@ -34,24 +41,18 @@ router.get('/:id',function(req, res) {
 /*Record the changes and navigate user to a success page if successful
 else, redirect the user to sign-in page*/
 router.post('/update_post', function(req, res){
-    var db = req.db;
-    var collection = db.get('posts');
     var id = req.body.id; ////
     var post = req.body.post;
     var current_user = req.body.user_name; // from html form
     var user_name = req.session.user_name; //session user
 
-    //aditional level of security in case anybody navigates to page without authentication
-    //it checks if the session user is the one making the changes
     if (current_user === user_name){
-        collection.findAndModify({
-                query: {_id: id}, 
-                update: {user_name: user_name, post: post, _id: id} 
-        }, function(err, doc){
+        Posts.findByIdAndUpdate(id, { $set: { post: post }}, function (err, doc) {
             if (err){
                 res.send("There was a problem updating your post.");
             }
             else{
+                doc.save();
                 res.render('update_post', {title : "Update complete", user_name: user_name});
             }
         });
@@ -67,27 +68,27 @@ router.post('/update_post', function(req, res){
 to a success page if successful
 else, redirect the user to sign-in page*/
 router.post('/delete_post', function(req,res){
-    var db = req.db;
-    var collection = db.get('posts');
     var id = req.body.id;
     var current_user = req.body.user_name; //from html form
     var user_name = req.session.user_name; //session user
     //aditional level of security in case anybody navigates to page without authentication
     //it checks if the session user is the one making the changes
     if (current_user === user_name){
-        collection.findAndModify({
-                query: {_id: id}, 
-                remove: true //for some reason, it does not delete
-        }, function(err, doc){
+        Posts.findByIdAndRemove(id, function (err, doc) {
             if (err){
                 res.send("There was a problem deleting your post.");
             }
             else{
-                collection.remove({_id:id}); //forced delete
-                res.render('update_post', {title : "Deletion complete", user_name: user_name});
-
+                doc.save();
+                Users.update({user_name:user_name},{$pull: {posts:id}}, {upsert:true},function(err, doc){
+                if (err){
+                    res.send("Cound not remove post from user's posts.");
+                }else{
+                    res.render('update_post', {title : "Deletion complete", user_name: user_name});
+                }
+                });
             }
-        });
+    }); 
     //in case the user got there without authentication, 
     //redirect to sign in page
     }else{

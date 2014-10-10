@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title><%= title %></title>
+    <link rel='stylesheet' href='/stylesheets/style.css' />
+  </head>
+  <body>
+    <h1> Users List</h1>
+    <a href="/logout">Logout!</a></br>
+    <a href="/allposts/<%=user_name%>"> See all Posts!</a> </br>
+    <div>
+      <% var users = result; %>
+      <% var num = result.length; %>
+      <% for(var i = 0; i < num; i++) { %>
+      <div>
+          <% var id = users[i]._id; %>
+          <b><%= users[i].user_name %> : </br></b>
+          <form method="post" action="subscribe" target="new">
+            <!-- Form containing a delete button -->
+            <input type="hidden" name="id" value=<%=id%>> 
+            <input type="hidden" name="user_name" value=<%=user_name%>> 
+            <button type="submit" name="button" value=<%=id%>>Subscribe!</button>
+          </form>​​​​​​​​​​​​​​​​​​​​​​​​​​</br>
+      </div>
+    <% } %>
+    </div>
+
+  </body>
+</html>
