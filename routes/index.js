@@ -160,30 +160,6 @@ router.post('/post_new_post', function(req, res){
         res.location("/");
         res.redirect("/");
     }
-
-/*        Posts.insert({
-            user_name : user_name,  //user_name
-            post : user_post        //post
-            },
-            function(err, doc) {
-                if (err) {
-                     // If it failed, return error
-                    res.send("There was a problem posting your post.");
-                }
-                else{
-                    //res.render('allposts', {title : "all Posts", user_name: user_name});
-                    //resets addressbar
-                    doc.save();
-                    var path = "allposts/"+user_name;
-                    res.location(path);
-                    // And forward to success page!
-                    res.redirect(path);
-                }
-            })
-    } else{
-        res.location("/");
-        res.redirect("/");
-    }*/
 });
 
 /* POST to see all posts sevice*/
@@ -207,19 +183,150 @@ router.get('/allusers/:user_name', function(req, res){
     var user_name = req.session.user_name;
     var current_user = req.params.user_name
     var path = "allusers";
-    
-    //show allt he posts in the database
-    Users.find({},{},function(e,docs){
-        res.render(path, { 
-            title: "alluserstoshow",
-            result : docs, 
-            user_name : current_user
+
+    if (user_name !== undefined){
+        //finding myself, to get who I am subscribed to
+        Users.findOne({user_name:user_name}).populate('following').exec(function(err, doc){
+            if (err){
+                res.send("could not find you!");
+            }else{
+
+                var myid = doc._id;
+                var thoseISubscribeto = doc.following;
+                console.log("Those I subscribe to "+thoseISubscribeto);
+                //process those i subscribe to, to give only ID
+                var idstoexclude = [myid];
+                var numbersubscribing = thoseISubscribeto.length;
+                console.log ("numbersubscribing   "+ numbersubscribing ); //correct number
+
+                for (var i=0; i<numbersubscribing; i++) {
+                    var current_user = thoseISubscribeto[i];
+                    console.log("subscribed to inside loop:" +current_user.user_name);
+                    idstoexclude.push(current_user._id);
+                }
+                console.log("exclude: " +idstoexclude);
+                console.log ("End of exclude!!!!!!!!!!")
+                //now find all users and exclude those I am subscribed to
+                //"_id":{"$ne":{"$all":thoseISubscribeto}}
+                //"_id": myid
+                Users.find({"_id":{"$nin":idstoexclude}},{},function(e,docs){
+                    if (e){
+                        console.log(e);
+                        res.send("cannot find all users")
+                    }else{
+                        console.log("docs start");
+                        console.log(docs);
+                        console.log("docs end");
+                        console.log("Those I subscribe to "+thoseISubscribeto);
+                        console.log("Those I subscribe END ");
+                        res.render(path, { 
+                            title: "alluserstoshow",
+                            subscribe : docs, 
+                            unsubscribe: thoseISubscribeto,
+                            user_name : current_user
+                        });
+                    }
+                }); //
+            }
         });
-    });
+    }else{
+        res.location("/");
+        res.redirect("/");
+    }
 });
 
-router.post('/subscribe', function(req, res){
 
+router.post('/allusers/subscribe', function(req, res){
+    var user_name = req.session.user_name;
+    var current_user = req.body.user_name;
+    var subscribeToid = req.body.id;
+    console.log(subscribeToid);
+    console.log(req.params);
+    // find my id
+    if (user_name !== undefined){
+        Users.findOne({user_name:user_name}, function(err, doc){
+            if (err){
+                res.send("could not find you!");
+            }else{
+                console.log(doc);
+                console.log(user_name);
+                var current_user_id = doc._id;
+                Users.update({user_name:user_name},{$push:{following:subscribeToid}},{upsert:true}, function(err,doc){
+                if (err){
+                    console.log(err);
+                    console.log(current_user_id);
+                    res.send("There was a problem subscribing to the user.");
+                }else{
+                    Users.update({_id:subscribeToid}, {$push:{followers:current_user_id}},{upsert:true}, function(err,doc){
+                        if (err){
+                            res.send("could not show who you are following");
+                        }else{
+                            //all worked out
+                            var path = "/allposts/"+user_name;
+                            res.location(path);
+                            // And forward to success page!
+                            res.redirect(path);
+                        }
+                    })
+
+                }
+            });
+
+            }
+        })
+    }
+    else{ //go back to sign-in page
+        res.location("/");
+        res.redirect("/");
+
+    }
+});
+
+
+router.post('/allusers/unsubscribe', function(req, res){
+    var user_name = req.session.user_name;
+    var current_user = req.body.user_name;
+    var subscribeToid = req.body.id;
+    console.log(subscribeToid);
+    console.log(req.params);
+    // find my id
+    if (user_name !== undefined){
+        Users.findOne({user_name:user_name}, function(err, doc){
+            if (err){
+                res.send("could not find you!");
+            }else{
+                console.log(doc);
+                console.log(user_name);
+                var current_user_id = doc._id;
+                Users.update({user_name:user_name},{$pull:{following:subscribeToid}},{upsert:true}, function(err,doc){
+                if (err){
+                    console.log(err);
+                    console.log(current_user_id);
+                    res.send("There was a problem subscribing to the user.");
+                }else{
+                    Users.update({_id:subscribeToid}, {$pull:{followers:current_user_id}},{upsert:true}, function(err,doc){
+                        if (err){
+                            res.send("could not show who you are following");
+                        }else{
+                            //all worked out
+                            var path = "/allposts/"+user_name;
+                            res.location(path);
+                            // And forward to success page!
+                            res.redirect(path);
+                        }
+                    })
+
+                }
+            });
+
+            }
+        })
+    }
+    else{ //go back to sign-in page
+        res.location("/");
+        res.redirect("/");
+
+    }
 });
 
 module.exports = router;
