@@ -13,12 +13,8 @@ router.get('/', function(req, res) {
 
 /* show the post that the user wants to edit*/
 router.get('/:id',function(req, res) {  
-    
     var id = req.params.id; //_id from link
     var current_user = req.session.user_name; 
-
-    console.log
-    
     Posts.findOne({_id:id}, function (err, docs){
         if (err){
             res.send("There was a problem looking for your post.");
