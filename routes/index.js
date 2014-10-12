@@ -67,7 +67,6 @@ router.post('/open_user_session', function(req, res){
         else{
             //if a match was found
             if (doc !== null){ 
-                console.log ("Got into here, did find user");
                 //cross check passwords
                 if(doc.password === password){
                     req.session.regenerate(
@@ -79,7 +78,6 @@ router.post('/open_user_session', function(req, res){
                 }
             }
             else{
-                console.log ("Did not find user with this login");
                 res.redirect("/");  //go sign up properly
             }
         }
@@ -94,8 +92,6 @@ router.post('/sign_up', function(req, res) {
     var name = req.body.name;
     var username = req.body.user_name;
     var password = req.body.password;
-
-    console.log("user signing up. user_name = "+ username);
 
     Users.findOne({
         user_name : username
@@ -114,9 +110,9 @@ router.post('/sign_up', function(req, res) {
                     }
                     else{
                         res.redirect("/");
-                     }
-                    });
-                }
+                    }
+                });
+            }
             else {
                 //resets addressbar
                 res.location("/failure");
@@ -124,7 +120,6 @@ router.post('/sign_up', function(req, res) {
                 res.redirect("/failure");
             }
         }
-
     });
 });
 
@@ -168,15 +163,36 @@ router.get('/allposts/:user_name', function(req, res){
     var current_user = req.params.user_name
     var path = "allposts";
     
-    //show allt he posts in the database
+    //show all the posts in the database
     Posts.find({},{},function(e,docs){
         res.render(path, { 
-            title: "allpoststoshow",
+            title: "Welcome to the Posts Feed!",
             result : docs, 
             user_name : current_user
         });
     });
 });
+
+/* POST to see all posts that match the query in the search box*/
+router.get('/allposts/search/:user_name', function(req, res){
+    var user_name = req.session.user_name;
+    var current_user = req.params.user_name;
+    var searchword = req.param("searchword");
+    var path = "allposts";
+    var splits = searchword.split(/\s+/).join("|");
+    var regex = new RegExp(splits);
+    
+    //show all the posts in the database that match query
+    Posts.find({post:regex},{},function(e,docs){
+        res.render(path, { 
+            title: "Search Results",
+            result : docs, 
+            user_name : current_user
+        });
+    });
+});
+
+
 
 /* POST to see all posts sevice*/
 router.get('/allusers/:user_name', function(req, res){
@@ -193,32 +209,20 @@ router.get('/allusers/:user_name', function(req, res){
 
                 var myid = doc._id;
                 var thoseISubscribeto = doc.following;
-                console.log("Those I subscribe to "+thoseISubscribeto);
                 //process those i subscribe to, to give only ID
-                var idstoexclude = [myid];
+                var idstoexclude = [myid]; // I want to not show myself on the users List
                 var numbersubscribing = thoseISubscribeto.length;
-                console.log ("numbersubscribing   "+ numbersubscribing ); //correct number
 
                 for (var i=0; i<numbersubscribing; i++) {
                     var current_user = thoseISubscribeto[i];
-                    console.log("subscribed to inside loop:" +current_user.user_name);
                     idstoexclude.push(current_user._id);
                 }
-                console.log("exclude: " +idstoexclude);
-                console.log ("End of exclude!!!!!!!!!!")
                 //now find all users and exclude those I am subscribed to
-                //"_id":{"$ne":{"$all":thoseISubscribeto}}
-                //"_id": myid
                 Users.find({"_id":{"$nin":idstoexclude}},{},function(e,docs){
                     if (e){
-                        console.log(e);
+                        //console.log(e);
                         res.send("cannot find all users")
                     }else{
-                        console.log("docs start");
-                        console.log(docs);
-                        console.log("docs end");
-                        console.log("Those I subscribe to "+thoseISubscribeto);
-                        console.log("Those I subscribe END ");
                         res.render(path, { 
                             title: "alluserstoshow",
                             subscribe : docs, 
@@ -226,7 +230,7 @@ router.get('/allusers/:user_name', function(req, res){
                             user_name : current_user
                         });
                     }
-                }); //
+                }); 
             }
         });
     }else{
@@ -235,28 +239,25 @@ router.get('/allusers/:user_name', function(req, res){
     }
 });
 
-
+/* This is the function called when a user follows another, It adds the user who clicks the button to the
+followee's "followers" section and adds the user chosen to the current user's "following" section*/
 router.post('/allusers/subscribe', function(req, res){
     var user_name = req.session.user_name;
     var current_user = req.body.user_name;
     var subscribeToid = req.body.id;
-    console.log(subscribeToid);
-    console.log(req.params);
     // find my id
     if (user_name !== undefined){
-        Users.findOne({user_name:user_name}, function(err, doc){
+        Users.findOne({user_name:user_name}, function(err, doc){ //find myself to find my id
             if (err){
                 res.send("could not find you!");
             }else{
-                console.log(doc);
-                console.log(user_name);
                 var current_user_id = doc._id;
+                //add the user I clicked on to my following section
                 Users.update({user_name:user_name},{$push:{following:subscribeToid}},{upsert:true}, function(err,doc){
                 if (err){
-                    console.log(err);
-                    console.log(current_user_id);
                     res.send("There was a problem subscribing to the user.");
                 }else{
+                    //add the follower to the other user's followers section
                     Users.update({_id:subscribeToid}, {$push:{followers:current_user_id}},{upsert:true}, function(err,doc){
                         if (err){
                             res.send("could not show who you are following");
@@ -268,42 +269,36 @@ router.post('/allusers/subscribe', function(req, res){
                             res.redirect(path);
                         }
                     })
-
                 }
             });
-
             }
         })
     }
     else{ //go back to sign-in page
         res.location("/");
         res.redirect("/");
-
     }
 });
 
-
+/* This is the function called when a user unfollows another, It removes the user who clicks the button from the
+followee's "followers" section and deletes the user chosen from the current user's "following" section*/
 router.post('/allusers/unsubscribe', function(req, res){
     var user_name = req.session.user_name;
     var current_user = req.body.user_name;
     var subscribeToid = req.body.id;
-    console.log(subscribeToid);
-    console.log(req.params);
     // find my id
     if (user_name !== undefined){
         Users.findOne({user_name:user_name}, function(err, doc){
             if (err){
                 res.send("could not find you!");
             }else{
-                console.log(doc);
-                console.log(user_name);
                 var current_user_id = doc._id;
+                //Removes the user I clicked on from my following section
                 Users.update({user_name:user_name},{$pull:{following:subscribeToid}},{upsert:true}, function(err,doc){
                 if (err){
-                    console.log(err);
-                    console.log(current_user_id);
                     res.send("There was a problem subscribing to the user.");
                 }else{
+                    //remove the follower from the other user's followers section
                     Users.update({_id:subscribeToid}, {$pull:{followers:current_user_id}},{upsert:true}, function(err,doc){
                         if (err){
                             res.send("could not show who you are following");
@@ -315,17 +310,14 @@ router.post('/allusers/unsubscribe', function(req, res){
                             res.redirect(path);
                         }
                     })
-
                 }
             });
-
             }
         })
     }
     else{ //go back to sign-in page
         res.location("/");
         res.redirect("/");
-
     }
 });
 

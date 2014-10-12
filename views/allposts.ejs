@@ -5,10 +5,18 @@
     <link rel='stylesheet' href='/stylesheets/style.css' />
   </head>
   <body>
-    <h1> Welcome to the post feed</h1>
+    <h1><%= title %></h1>
     <a href="/logout">Logout!</a></br>
-    <a href="/allusers/<%=user_name%>"> See all Users!</a> </br>
+    <a href="/allusers/<%=user_name%>"> Manage Subscriptions!</a> </br>
     <p> See what's going on on Fritter OR <a href="/post_new_post">Post Something!</a> </p>
+
+    <form method="get" action="/allposts/search/<%=user_name%>">
+         <!-- Form containing a search button -->
+        <input type="hidden" name="user_name" value=<%=user_name%>> 
+        Search: <input type="text" name="searchword" placeholder="Enter word/phrase" required>
+        <button type="submit">Search Posts!</button>
+    </form>​​​​​​​​​​​​​​​​​​​​​​​​​​</br>
+
     <div>
       <% var docs = result; %>
       <% var num = result.length; %>

@@ -14,7 +14,7 @@ var users = require('./routes/users');
 var posts = require('./routes/posts');
 var app = express();
 
-//connection stuff
+//connection parameters
 var connection_string = 'mongodb://127.0.0.1/saadiyahfritter';
 if (process.env.OPENSHIFT_MONGODB_DB_PASSWORD) {
   connection_string = process.env.OPENSHIFT_MONGODB_DB_USERNAME + ':' +
@@ -25,11 +25,6 @@ if (process.env.OPENSHIFT_MONGODB_DB_PASSWORD) {
 
 //Switching to mongoose
 mongoose.connect(connection_string);
-//var db = mongoose.connection;
-//db.on('error', console.error.bind(console, 'Mongoose connection error:'));
-
-
-/////////////
 
 // view engine setup
 app.set('views', path.join(__dirname, 'views'));

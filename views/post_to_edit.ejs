@@ -7,7 +7,7 @@
   <body>
     <h1>Edit your post or delete it!</h1>
     <p> </p>
-      <form method="post" action="update_post" target="new">
+      <form method="post" action="update_post">
          <!-- Form gathering changes to a post and containing update button -->
         Post: </br>
         <input type="text" name="post" value ="<%=postText%>" class="postTextboxStyling" required>
@@ -15,7 +15,7 @@
         <input type="hidden" name="user_name" value=<%=user_name%>> </br>
         <button type="submit" name="button">Update Post!</button>
       </form>​​​​​​​​​​​​​​​​​​​​​​​​​​
-      <form method="post" action="delete_post" target="new">
+      <form method="post" action="delete_post">
          <!-- Form containing a delete button -->
         <input type="hidden" name="id" value=<%=id%>> 
         <input type="hidden" name="user_name" value=<%=user_name%>> 
